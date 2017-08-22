@@ -62,6 +62,36 @@ export const turnIndexToStr = (idx: number):string => {
     return ''
 }
 
+export const getIndexOfMax = (arr: number[]): number => {
+
+    let max: number = arr[0]
+    let maxIndex: number = 0
+
+    for (let i: number = 1; i < arr.length; i++) {
+        if (arr[i] > max) {
+            maxIndex = i
+            max = arr[i]
+        }
+    }
+
+    return maxIndex
+}
+
+export const getItemThatAppearsMost = (arr: string[]): string => {
+
+    let max: string = arr[0]
+    let maxIndex: number = 0
+
+    for (let i: number = 1; i < arr.length; i++) {
+        if (arr[i] > max) {
+            maxIndex = i
+            max = arr[i]
+        }
+    }
+
+    return max
+}
+
 export const flatten = (arr: any[][]): any[] => [].concat.apply([], arr)
 
 export const countCorrect = (arr: string[]): number => {

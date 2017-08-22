@@ -1,4 +1,4 @@
-import { flatten, randomMatrix } from './helpers'
+import { flatten, randomMatrix } from './utils/helpers'
 import ActivationFunctions from './ActivationFunctions'
 import { ActivationFunction } from './types'
 import * as Matrix from './matrix/matrix'
@@ -33,6 +33,7 @@ export class NeuralNetwork {
 
         const finalInputs: number[][] = Matrix.dotProduct(this.bcWeights, hiddenOutputs)
         const finalOutputs: number[][] =  Matrix.scaleMatrix(finalInputs, this.activationFunction.output)
+
         return flatten(finalOutputs)
 
     }
