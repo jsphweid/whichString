@@ -1,7 +1,7 @@
 import * as React from 'react'
 import './App.css'
 import { NeuralNetwork } from './nn'
-// import { myFft } from './utils/fft/fft'
+import { myFft } from './utils/fft/fft'
 import {getIndexOfMax, getItemThatAppearsMost} from './utils/helpers'
 
 interface MyState {
@@ -14,7 +14,7 @@ class App extends React.Component <any, MyState> {
 
     constructor(props: any) {
         super(props)
-        const nn: any = new NeuralNetwork(512, 5, 4)
+        const nn: any = new NeuralNetwork(512, 500, 4)
         nn.loadWeights()
         this.state = {
             nn,
@@ -43,15 +43,16 @@ class App extends React.Component <any, MyState> {
             analyserNode.fftSize = 1024
             micStream.connect(analyserNode)
             analyserNode.connect(scriptProcessorAnalysisNode)
-            const freqDomain = new Uint8Array(1024)
-            scriptProcessorAnalysisNode.onaudioprocess = () => {
-                analyserNode && analyserNode.getByteFrequencyData(freqDomain)
-                const idx: number = getIndexOfMax(this.state.nn.query(Array.from(freqDomain.slice(0, 512))))
+
+            scriptProcessorAnalysisNode.onaudioprocess = (event) => {
+                const buffer: number[] = Array.from(event.inputBuffer.getChannelData(0))
+                const fft: any = myFft(buffer).slice(0, 512)
+
+                const idx: number = getIndexOfMax(this.state.nn.query(fft))
                 const guessedString: string = ['g', 'd', 'a', 'e'][idx]
                 const lastTen = this.state.lastTen.slice(0, 9)
                 lastTen.unshift(guessedString)
                 this.setState({ guessedString, lastTen })
-
             }
         }
 
