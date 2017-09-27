@@ -12,8 +12,8 @@ import json
 
 # mono files only
 
-BUFFER_SIZE = 64
-VERSION = 'v0.02'
+BUFFER_SIZE = 2048
+VERSION = 'v0.06'
 halfBufferSize = int(BUFFER_SIZE / 2)
 
 

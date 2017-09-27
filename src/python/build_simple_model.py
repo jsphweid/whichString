@@ -19,13 +19,13 @@ os.environ['TF_CPP_MIN_LOG_LEVEL']='2'
 # from tensorflow.examples.tutorials.mnist import input_data
 # mnist = input_data.read_data_sets("MNIST_data/", one_hot=True)
 
-base_dir = '/tmp/tensorflow/whichString/v0.02__32_fft-size/'
+base_dir = '/tmp/tensorflow/whichString/v0.03__512_fft-size/'
 import numpy as np
 
 # in the future, figure out a better way of doing this shit
 # https://www.tensorflow.org/programmers_guide/datasets
 
-FFT_SIZE = 32
+FFT_SIZE = 512
 CONV_SIZE = 5
 NUM_STRINGS = 4
 
@@ -50,8 +50,6 @@ def next_batch(batch_size):
 
 import tensorflow as tf 
 
-
-
 def get_weight_variable(shape):
 	initial = tf.truncated_normal(shape, stddev=0.1)
 	return tf.Variable(initial)
@@ -63,42 +61,68 @@ def get_bias_variable(shape):
 def conv1d(x, W):
 	return tf.nn.conv1d(x, W, stride=1, padding='VALID')
 
-# variables
+def max_pool_2(x):
+    return tf.layers.max_pooling1d(x, 2, 2, padding='VALID') #pooling probably is affecting the wrong thing...
 
-MIDDLE_LAYER_SIZE = 256
-
+######### DECLARE VARIABLES
 x_ = tf.placeholder(tf.float32, shape=[None, FFT_SIZE], name="x_")
 y_ = tf.placeholder(tf.float32, shape=[None, NUM_STRINGS], name="y_")
 keep_prob = tf.placeholder(tf.float32)
 
-W_conv1 = get_weight_variable([CONV_SIZE, 1, MIDDLE_LAYER_SIZE])
-b_conv1 = get_bias_variable([MIDDLE_LAYER_SIZE])
-
-
 x_resized = tf.reshape(x_, [-1, FFT_SIZE, 1])
+
+######### FIRST CONVOLUTIONAL LAYER
+FIRST_LAYER_SIZE = 32
+W_conv1 = get_weight_variable([CONV_SIZE, 1, FIRST_LAYER_SIZE])
+b_conv1 = get_bias_variable([FIRST_LAYER_SIZE])
 conv1 = conv1d(x_resized, W_conv1)
 h_conv1 = tf.nn.relu(conv1 + b_conv1)
+h_pool1 = max_pool_2(h_conv1)
 
-LAYER_SIZE = (FFT_SIZE - CONV_SIZE + 1) * MIDDLE_LAYER_SIZE
+FFT_SIZE_AFTER_POOL1 = int((FFT_SIZE - CONV_SIZE + 1) / 2)
 
-W_fc = get_weight_variable([LAYER_SIZE, 4])
-b_fc = get_bias_variable([4])
-h_conv1_reshaped = tf.reshape(h_conv1, [-1, LAYER_SIZE])
-y_conv = tf.matmul(h_conv1_reshaped, W_fc) + b_fc
+######### SECOND CONVOLUTIONAL LAYER
+SECOND_LAYER_SIZE = 64
+W_conv2 = get_weight_variable([CONV_SIZE, FIRST_LAYER_SIZE, SECOND_LAYER_SIZE])
+b_conv2 = get_bias_variable([SECOND_LAYER_SIZE])
+conv2 = conv1d(h_pool1, W_conv2)
+h_conv2 = tf.nn.relu(conv2 + b_conv2)
+h_pool2 = max_pool_2(h_conv2)
 
-y_conv_dropped = tf.nn.dropout(y_conv, keep_prob)
+FFT_SIZE_AFTER_POOL2 = int((FFT_SIZE_AFTER_POOL1 - CONV_SIZE + 1) / 2)
+THIRD_LAYER_SIZE = FFT_SIZE_AFTER_POOL2 * SECOND_LAYER_SIZE
+
+######### DENSELY CONNECTED LAYER
+DENSELY_CONNECTED_LAYER_SIZE = 1024
+W_fc1 = get_weight_variable([THIRD_LAYER_SIZE, DENSELY_CONNECTED_LAYER_SIZE])
+b_fc1 = get_bias_variable([DENSELY_CONNECTED_LAYER_SIZE])
+h_pool2_flat = tf.reshape(h_pool2, [-1, THIRD_LAYER_SIZE])
+h_fc1 = tf.nn.relu(tf.matmul(h_pool2_flat, W_fc1) + b_fc1)
+
+######### DROPOUT LAYER
+h_fc1_dropped = tf.nn.dropout(h_fc1, keep_prob)
+
+######### READOUT LAYER
+W_fc2 = get_weight_variable([DENSELY_CONNECTED_LAYER_SIZE, NUM_STRINGS])
+b_fc2 = get_bias_variable([NUM_STRINGS])
+
+y_conv = tf.matmul(h_fc1_dropped, W_fc2) + b_fc2
+
+# h_pool2_reshaped = tf.reshape(h_pool2, [-1, THIRD_LAYER_SIZE])
+# y_conv = tf.matmul(h_pool2_reshaped, W_fc) + b_fc
 
 
-cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=y_, logits=y_conv_dropped))
+
+cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=y_, logits=y_conv))
 train_step = tf.train.AdamOptimizer(1e-4).minimize(cross_entropy)
 
-correct_prediction = tf.equal(tf.argmax(y_conv_dropped, 1), tf.argmax(y_, 1))
+correct_prediction = tf.equal(tf.argmax(y_conv, 1), tf.argmax(y_, 1))
 accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
 
 with tf.Session() as sess:
 
+    saver = tf.train.Saver()
     sess.run(tf.global_variables_initializer())
-
 
     for i in range(10000):
         batch_xs, batch_ys = next_batch(100)
@@ -108,6 +132,10 @@ with tf.Session() as sess:
             train_accuracy = accuracy.eval(feed_dict=feed_dict_test)
             print('step %d, training accuracy %g' % (i, train_accuracy))
         sess.run(train_step, feed_dict=feed_dict_train)
+
+    checkpoint_file = os.path.join('/tmp/tensorflow/models/', 'good.ckpt')
+    saver.save(sess, checkpoint_file)
+    
 
     print(sess.run(accuracy, feed_dict=feed_dict_test))
     

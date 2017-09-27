@@ -1,0 +1,66 @@
+{
+  "beta1_power": {
+    "filename": "beta1_power",
+    "shape": []
+  },
+  "beta2_power": {
+    "filename": "beta2_power",
+    "shape": []
+  },
+  "bias-conv1": {
+    "filename": "biasconv1",
+    "shape": [
+      32
+    ]
+  },
+  "bias-conv2": {
+    "filename": "biasconv2",
+    "shape": [
+      64
+    ]
+  },
+  "bias-fully-connected1": {
+    "filename": "biasfullyconnected1",
+    "shape": [
+      1024
+    ]
+  },
+  "bias-fully-connected2": {
+    "filename": "biasfullyconnected2",
+    "shape": [
+      4
+    ]
+  },
+  "weight-conv1": {
+    "filename": "weightconv1",
+    "shape": [
+      5,
+      5,
+      1,
+      32
+    ]
+  },
+  "weight-conv2": {
+    "filename": "weightconv2",
+    "shape": [
+      5,
+      5,
+      32,
+      64
+    ]
+  },
+  "weight-fully-connected1": {
+    "filename": "weightfullyconnected1",
+    "shape": [
+      4096,
+      1024
+    ]
+  },
+  "weight-fully-connected2": {
+    "filename": "weightfullyconnected2",
+    "shape": [
+      1024,
+      4
+    ]
+  }
+}

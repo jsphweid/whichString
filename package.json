@@ -13,6 +13,7 @@
     "react-mic": "^8.0.0"
   },
   "devDependencies": {
+    "deeplearn": "^0.2.4",
     "react-scripts-ts": "2.6.0"
   },
   "scripts": {
