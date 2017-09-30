@@ -6,16 +6,13 @@ import random
 import os
 import sys
 import json
-
-# from json import encoder
-# encoder.FLOAT_REPR = lambda o: format(o, '.2f')
+from constants import BASE_PATH, BASE_PATH_WITH_DATA, SOURCE_URL, RAW_DATA_DICT
 
 # mono files only
 
 BUFFER_SIZE = 2048
 VERSION = 'v0.06'
 halfBufferSize = int(BUFFER_SIZE / 2)
-
 
 wavsToProcess = [
     {"path": "./../data/g_string.wav", "string": "g"},
@@ -96,7 +93,7 @@ def getRandomIndexArrayWithLength(len):
     random.shuffle(ret)
     return ret
 
-def makeItHappen():
+def generate_train_test_from_raw_data():
 
     specificFolder = VERSION + '__' + str(int(BUFFER_SIZE / 2)) + '_fft-size/'
     baseDir = '/tmp/tensorflow/whichString/' + specificFolder
@@ -122,7 +119,7 @@ def makeItHappen():
         training_data_tensor = []
         for i in range(0, training_size):
             line = allLinesToWrite[randomIndexArray[i]]
-            training_data_tensor.append(line[1].tolist()) # 1 is the fftChunk
+            training_data_tensor.append(line[1].tolist())
         json.dump(training_data_tensor, file)
     
 
@@ -130,14 +127,14 @@ def makeItHappen():
         training_labels_tensor = []
         for i in range(0, training_size):
             line = allLinesToWrite[randomIndexArray[i]]
-            training_labels_tensor.append(line[0]) # 0 is the y hotEncoded
+            training_labels_tensor.append(line[0])
         json.dump(training_labels_tensor, file)
 
     with open(baseDir + '/data_test.json', 'w') as file:
         test_data_tensor = []
         for i in range(training_size, allLinesToWrite_length):
             line = allLinesToWrite[randomIndexArray[i]]
-            test_data_tensor.append(line[1].tolist()) # 1 is the fftChunk
+            test_data_tensor.append(line[1].tolist())
         json.dump(test_data_tensor, file)
 
 
@@ -145,8 +142,8 @@ def makeItHappen():
         test_labels_tensor = []
         for i in range(training_size, allLinesToWrite_length):
             line = allLinesToWrite[randomIndexArray[i]]
-            test_labels_tensor.append(line[0]) # 0 is the y hotEncoded
+            test_labels_tensor.append(line[0])
         json.dump(test_labels_tensor, file)
 
 
-makeItHappen()
+generate_train_test_from_raw_data()

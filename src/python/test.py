@@ -1,0 +1,3 @@
+import maybe_download_data
+
+print(maybe_download_data.BASE_PATH)
