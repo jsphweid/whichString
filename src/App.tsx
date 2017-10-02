@@ -65,7 +65,8 @@ class App extends React.Component <any, MyState> {
                 <p className="App-intro">
                     Play that violin!
                 </p>
-                <button onClick={Train.buildModel}>Train</button>
+                <button onClick={Train.buildGraph}>Train</button>
+                <button onClick={Train.getBatch}>Test</button>
             </div>
         )
     }

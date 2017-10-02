@@ -7,12 +7,14 @@
     "@types/node": "^8.0.24",
     "@types/react": "^16.0.2",
     "@types/react-dom": "^15.5.3",
+    "axios": "^0.16.2",
     "react": "^15.6.1",
     "react-audio-recorder": "^2.0.0",
     "react-dom": "^15.6.1",
     "react-mic": "^8.0.0"
   },
   "devDependencies": {
+    "@types/axios": "^0.14.0",
     "deeplearn": "^0.2.4",
     "react-scripts-ts": "2.6.0"
   },
@@ -21,6 +23,6 @@
     "build": "react-scripts-ts build",
     "test": "react-scripts-ts test --env=jsdom",
     "eject": "react-scripts-ts eject",
-    "start:server": "FLASK_APP=src/next_batch_server.py flask run"
+    "start:server": "FLASK_APP=src/python/next_batch_server.py flask run"
   }
 }
