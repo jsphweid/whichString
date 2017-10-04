@@ -8,6 +8,22 @@ from download_raw_data import make_dirs_if_not_exists, maybe_download_files
 from build_data import maybe_build_data_from_raw_data, get_target_dir
 from constants import BASE_PATH_WITH_RAW_DATA
 
+
+def reform_tensor_for_deeplearnjs(arr):
+    newArr = []
+    arrLen = len(arr[0])
+    for item in arr:
+        array1d = {
+            'data': {
+                'values': item
+            },
+            'shape': [arrLen],
+            'size': arrLen
+        }
+        newArr.append(array1d)
+    return newArr
+
+
 print("making directories if they' don't already exist...")
 make_dirs_if_not_exists()
 print("downloading wavs if they haven't already been downloaded...")
@@ -18,13 +34,13 @@ print("setting target directory...")
 target_dir = get_target_dir(2048)
 print("opening files")
 with open(os.path.join(target_dir, 'labels_test.json')) as data:
-    test_labels = json.load(data)
+    test_labels = reform_tensor_for_deeplearnjs(json.load(data))
 with open(os.path.join(target_dir, 'labels_training.json')) as data:
-    training_labels = json.load(data)
+    training_labels = reform_tensor_for_deeplearnjs(json.load(data))
 with open(os.path.join(target_dir, 'data_test.json')) as data:
-    test_data = json.load(data)
+    test_data = reform_tensor_for_deeplearnjs(json.load(data))
 with open(os.path.join(target_dir, 'data_training.json')) as data:
-    training_data = json.load(data)
+    training_data = reform_tensor_for_deeplearnjs(json.load(data))
 
 def next_batch(batch_size):
     idx = np.arange(0 , len(training_data))
@@ -41,6 +57,17 @@ def hello():
     batch_size = int(request.args.get('batchsize'))
     data, labels = next_batch(batch_size)
     return jsonify({
-        'data': data,
+        'inputs': data,
         'labels': labels
     })
+
+@app.route('/getAllData', methods=['GET'])
+def getAllTrainingData():
+    data_type = request.args.get('type')
+    if data_type == 'TRAINING':
+        data = { 'inputs': training_data, 'labels': training_labels }
+    elif data_type == 'TEST':
+        data = { 'inputs': test_data, 'labels': test_labels }
+
+    
+    return jsonify(data)

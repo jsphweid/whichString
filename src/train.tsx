@@ -1,13 +1,13 @@
 import {
     Array1D, NDArrayMathGPU, Scalar, Graph, Array2D, Array4D, SGDOptimizer, GraphRunner, Session,
-    GraphRunnerEventObserver, FeedEntry
+    GraphRunnerEventObserver, FeedEntry, InCPUMemoryShuffledInputProviderBuilder
 } from 'deeplearn'
 import axios from 'axios'
 import NodeBuilders from "./node-builders";
 
 interface BatchType {
-    data: number[][]
-    labels: number[][]
+    inputs: Array1D[]
+    labels: Array1D[]
 }
 
 
@@ -20,18 +20,18 @@ export default class Train {
     static NUM_STRINGS: number = 4
 
 
-    static buildGraph() {
+    static buildGraphAndStartTraining() {
 
         const g = new Graph()
 
-        const x_ = g.placeholder('input', [Train.BATCH_SIZE, Train.FFT_SIZE])
-        const y_ = g.placeholder('expected output', [Train.BATCH_SIZE, Train.NUM_STRINGS])
+        const x_ = g.placeholder('input', [Train.FFT_SIZE])
+        const y_ = g.placeholder('expected output', [Train.NUM_STRINGS])
 
         const w_conv1 = NodeBuilders.buildVariable(g, [5, 5, 1, 32], 'w_conv1')
         const b_conv1 = NodeBuilders.buildVariable(g, [32], 'b_conv1')
 
         // does dljs not support batch processing convolution???
-        const x_reshaped = g.reshape(x_, [Train.BATCH_SIZE, Train.FFT_SQRT, Train.FFT_SQRT, 1])
+        const x_reshaped = g.reshape(x_, [Train.FFT_SQRT, Train.FFT_SQRT, 1])
         const conv1 = g.conv2d(x_reshaped, w_conv1, b_conv1, 5, 32, 1, 2)
         const relu1 = g.relu(conv1)
         const maxPool1 = g.maxPool(relu1, 2, 2, 0)
@@ -46,7 +46,7 @@ export default class Train {
         const w_fc1 = NodeBuilders.buildVariable(g, [currentSize, 1024], 'w_fc1')
         const b_fc1 = NodeBuilders.buildVariable(g, [1024], 'b_fc1')
 
-        const h_pool2_flat = g.reshape(maxPool2, [Train.BATCH_SIZE, currentSize])
+        const h_pool2_flat = g.reshape(maxPool2, [currentSize])
         const f_fc1 = g.relu(g.add(g.matmul(h_pool2_flat, w_fc1), b_fc1))
 
         const w_fc2 = NodeBuilders.buildVariable(g, [1024, 4], 'w_fc2')
@@ -71,12 +71,19 @@ export default class Train {
         }
         const graphRunner = new GraphRunner(mathGpuInstance, session, eventObserver)
 
-        return Train.getBatch()
-            .then((response) => {
+        Train.getAllData(true)
+            .then((response: any) => {
+
+                const responseData: BatchType = response.data
+
+                const shuffledInputProviderBuilder =
+                    new InCPUMemoryShuffledInputProviderBuilder([responseData.inputs, responseData.labels])
+                const [inputProvider, labelProvider] =
+                    shuffledInputProviderBuilder.getInputProviders()
 
                 const feedEntries: FeedEntry[] = [
-                    {tensor: x_, data: response.data},
-                    {tensor: y_, data: response.labels}
+                    {tensor: x_, data: inputProvider},
+                    {tensor: y_, data: labelProvider}
                 ]
 
                 graphRunner.train(
@@ -92,9 +99,21 @@ export default class Train {
 
     }
 
-    static runBatch(batch: BatchType) {
+    static getAllData(training: boolean = true): Promise<any> {
 
-        console.log(batch)
+        const axiosInstance = axios.create({
+            baseURL: 'http://localhost:5000',
+            timeout: 30000,
+            headers: {
+                'Access-Control-Allow-Origin': 'localhost'
+            }
+        })
+
+        const type: string = training ? 'TRAINING' : 'TEST'
+
+        return axiosInstance.get(`/getAllData?type=${type}`)
+            .then((response) => response)
+            .catch((error) => console.log(error))
 
     }
 
@@ -102,14 +121,14 @@ export default class Train {
 
         const axiosInstance = axios.create({
             baseURL: 'http://localhost:5000',
-            timeout: 10000,
+            timeout: 30000,
             headers: {
                 'Access-Control-Allow-Origin': 'localhost'
             }
         })
 
         return axiosInstance.get(`/?batchsize=${Train.BATCH_SIZE}`)
-            .then((response) => Train.runBatch(response.data))
+            .then((response) => console.log(response))
             .catch((error) => console.log(error))
 
     }
