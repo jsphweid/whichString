@@ -13,4 +13,3 @@ I ran in a virtual python environment with 'virtualenv' using `source ~/tensorfl
 - take out parts of the violin signal that are not actually playing or too quiet to register...
 
 ## python dependencies
-- `pip install -U flask-cors`
