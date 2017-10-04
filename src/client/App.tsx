@@ -1,7 +1,5 @@
 import * as React from 'react'
-
-const isBrowser = typeof window !== 'undefined'
-const Train = isBrowser ? require('./train') : null
+import Train from './train'
 
 interface MyState {
     nn: any,

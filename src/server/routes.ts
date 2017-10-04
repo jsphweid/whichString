@@ -4,11 +4,11 @@ const jsonfile = require('jsonfile')
 const path = require('path')
 import { Array1D } from 'deeplearn'
 const whichVersion = 'buf2048_fft1024_h55348_v1'
-const basePath = 'tmp/whichString/data'
-const trainingInputs: Array1D[] = require(path.join(basePath, whichVersion, 'data_training.json')).map((item: number[]) => Array1D.new(item))
-const trainingLabels: Array1D[] = require(path.join(basePath, whichVersion, 'labels_training.json')).map((item: number[]) => Array1D.new(item))
-const testInputs: Array1D[] = require(path.join(basePath, whichVersion, 'data_test.json')).map((item: number[]) => Array1D.new(item))
-const testLabels: Array1D[] = require(path.join(basePath, whichVersion, 'labels_test.json')).map((item: number[]) => Array1D.new(item))
+const basePath = '/tmp/whichString/data'
+const trainingInputs: Array1D[] = jsonfile.readFileSync(join(basePath, whichVersion, 'data_training.json')).map((item: number[]) => Array1D.new(item))
+const trainingLabels: Array1D[] = jsonfile.readFileSync(join(basePath, whichVersion, 'labels_training.json')).map((item: number[]) => Array1D.new(item))
+const testInputs: Array1D[] = jsonfile.readFileSync(join(basePath, whichVersion, 'data_test.json')).map((item: number[]) => Array1D.new(item))
+const testLabels: Array1D[] = jsonfile.readFileSync(join(basePath, whichVersion, 'labels_test.json')).map((item: number[]) => Array1D.new(item))
 
 
 import { RenderReact } from './render'
