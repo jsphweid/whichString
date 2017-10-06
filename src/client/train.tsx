@@ -55,8 +55,7 @@ console.log('start')
 
         const optimizer = new SGDOptimizer(0.005)
 
-        const mathGpuInstance = new NDArrayMathGPU()
-        const session: Session = new Session(g, mathGpuInstance)
+        const session: Session = new Session(g, math)
         // const eventObserver: GraphRunnerEventObserver = {
         //     batchesTrainedCallback: (batchesTrained: number) => console.log(batchesTrained),
         //     avgCostCallback: (avgCost: Scalar) => console.log('avgCost', avgCost),
