@@ -4,7 +4,7 @@ export default class NodeBuilders {
 
     static buildVariable(g: Graph, shape: any, name: string) {
 
-        const mean: number = 0 // 0 is default
+        const mean: number = 0.01 // 0 is default
         const stddev: number = 0.1
 
         switch(shape.length) {

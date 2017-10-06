@@ -53,7 +53,7 @@ console.log('start')
 
         const costTensor = g.softmaxCrossEntropyCost(y_conv, y_)
 
-        const optimizer = new SGDOptimizer(0.005)
+        const optimizer = new SGDOptimizer(0.001)
 
         const session: Session = new Session(g, math)
         // const eventObserver: GraphRunnerEventObserver = {
@@ -75,6 +75,8 @@ console.log('start')
                 const transformArr = (item: number[]) => Array1D.new(item)
                 const inputs: Array1D[] = response.data.inputs.map(transformArr)
                 const labels: Array1D[] = response.data.labels.map(transformArr)
+                const testInputs: Array1D[] = response.data.testInputs.map(transformArr)
+                const testLabels: Array1D[] = response.data.testLabels.map(transformArr)
 
                 const shuffledInputProviderBuilder =
                     new InGPUMemoryShuffledInputProviderBuilder([inputs, labels])
@@ -94,6 +96,53 @@ console.log('start')
                         console.log('last average cost (' + i + '): ' + cost.get())
                     })
                 }
+
+                math.scope((keep: any, track: any) => {
+                    let index: number = 0
+                    let testInput = track(testInputs[index])
+                    let testLabel = track(testLabels[index])
+
+                    // session.eval can take NDArrays as input data.
+                    let testFeedEntries: FeedEntry[] = [
+                        {tensor: x_, data: testInput},
+                        {tensor: y_, data: testLabel}
+                    ]
+                    let testOutput = session.eval(y_, testFeedEntries)
+
+                    console.log('value: ' + testOutput.get(index))
+
+                    //////////////////////////
+
+                    index++
+                    testInput = track(testInputs[index])
+                    testLabel = track(testLabels[index])
+
+                    // session.eval can take NDArrays as input data.
+                    testFeedEntries = [
+                        {tensor: x_, data: testInput},
+                        {tensor: y_, data: testLabel}
+                    ]
+                    testOutput = session.eval(y_, testFeedEntries)
+
+                    console.log('value: ' + JSON.stringify(testOutput))
+
+                    // see if there is a way to feed numbers in here in real time...
+                    // the output of session.eval() is:
+                    // value: {"size":4,"shape":[4],"data":{"values":{"0":1,"1":0,"2":0,"3":0}},"strides":[]}
+                    // where data.values (find one that equals 1) is the string that it has guessed...
+                    // find way to persist the weights
+
+
+
+
+
+
+
+
+                })
+
+                inputs.forEach(input => input.dispose())
+                labels.forEach(label => label.dispose())
 
 
             })

@@ -53,15 +53,20 @@ export default (app: express.Application) => {
 
     app.get('/getAllTrainingData', (req: Request, res: Response): Response => {
         return isDev
-            ? res.status(200).json({ inputs: possibleData.trainingInputs, labels: possibleData.trainingLabels })
+            ? res.status(200).json({
+                inputs: possibleData.trainingInputs,
+                labels: possibleData.trainingLabels,
+                testInputs: possibleData.testInputs,
+                testLabels: possibleData.testLabels
+            })
             : res.status(400).json({ message: localOnlyMessage })
     })
 
-    app.get('/getAllTestData', (req: Request, res: Response): Response => {
-        return isDev
-            ? res.status(200).json({ inputs: possibleData.testInputs, labels: possibleData.testLabels })
-            : res.status(400).json({ message: localOnlyMessage })
-    })
+    // app.get('/getAllTestData', (req: Request, res: Response): Response => {
+    //     return isDev
+    //         ? res.status(200).json({ testInputs: possibleData.testInputs, testLabels: possibleData.testLabels })
+    //         : res.status(400).json({ message: localOnlyMessage })
+    // })
 
     app.get('*', (req: Request, res: Response): Response => {
 
