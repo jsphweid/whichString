@@ -1,7 +1,9 @@
 import {
     Array1D, NDArrayMathGPU, Scalar, Graph, Array2D, Array4D, SGDOptimizer, GraphRunner, Session,
-    GraphRunnerEventObserver, FeedEntry, InCPUMemoryShuffledInputProviderBuilder
+    GraphRunnerEventObserver, FeedEntry, InCPUMemoryShuffledInputProviderBuilder, CostReduction, NDArrayMathCPU,
+    InGPUMemoryShuffledInputProviderBuilder
 } from 'deeplearn'
+const math: any = (typeof(window) !== 'undefined') ? new NDArrayMathGPU() : null
 import axios from 'axios'
 import NodeBuilders from './variable-builders'
 import { BatchType } from '../shared/types'
@@ -16,7 +18,7 @@ export default class Train {
 
 
     static buildGraphAndStartTraining() {
-
+console.log('start')
         const g = new Graph()
 
         const x_ = g.placeholder('input', [Train.FFT_SIZE])
@@ -51,28 +53,32 @@ export default class Train {
 
         const costTensor = g.softmaxCrossEntropyCost(y_conv, y_)
 
-        const optimizer = new SGDOptimizer(0.5)
+        const optimizer = new SGDOptimizer(0.005)
 
         const mathGpuInstance = new NDArrayMathGPU()
         const session: Session = new Session(g, mathGpuInstance)
-        const eventObserver: GraphRunnerEventObserver = {
-            batchesTrainedCallback: (batchesTrained: number) => console.log(batchesTrained),
-            avgCostCallback: (avgCost: Scalar) => console.log('avgCost', avgCost),
-            metricCallback: (metric: Scalar) => console.log('metric', metric),
-            inferenceExamplesCallback: () => {},
-            inferenceExamplesPerSecCallback: (examplesPerSec: number) => console.log('examplesPerSec', examplesPerSec),
-            trainExamplesPerSecCallback: (examplesPerSec: number) => console.log('examplesPerSec', examplesPerSec),
-            totalTimeCallback: (totalTimeSec: number) => () => {}
-        }
-        const graphRunner = new GraphRunner(mathGpuInstance, session, eventObserver)
-
+        // const eventObserver: GraphRunnerEventObserver = {
+        //     batchesTrainedCallback: (batchesTrained: number) => console.log(batchesTrained),
+        //     avgCostCallback: (avgCost: Scalar) => console.log('avgCost', avgCost),
+        //     metricCallback: (metric: Scalar) => console.log('metric', metric),
+        //     inferenceExamplesCallback: () => {},
+        //     inferenceExamplesPerSecCallback: (examplesPerSec: number) => console.log('examplesPerSec', examplesPerSec),
+        //     trainExamplesPerSecCallback: (examplesPerSec: number) => console.log('examplesPerSec', examplesPerSec),
+        //     totalTimeCallback: (totalTimeSec: number) => () => {}
+        // }
+        // const graphRunner = new GraphRunner(mathGpuInstance, session, eventObserver)
+        console.log('graph built... fetching data')
         Train.getAllData(true)
             .then((response: any) => {
+                console.log('data fetched... running graph with data')
 
-                const responseData: BatchType = response.data
+                // for some reason this can't go on the server...
+                const transformArr = (item: number[]) => Array1D.new(item)
+                const inputs: Array1D[] = response.data.inputs.map(transformArr)
+                const labels: Array1D[] = response.data.labels.map(transformArr)
 
                 const shuffledInputProviderBuilder =
-                    new InCPUMemoryShuffledInputProviderBuilder([responseData.inputs, responseData.labels])
+                    new InGPUMemoryShuffledInputProviderBuilder([inputs, labels])
                 const [inputProvider, labelProvider] =
                     shuffledInputProviderBuilder.getInputProviders()
 
@@ -81,12 +87,14 @@ export default class Train {
                     {tensor: y_, data: labelProvider}
                 ]
 
-                graphRunner.train(
-                    costTensor,
-                    feedEntries,
-                    50,
-                    optimizer
-                )
+                for (let i = 0; i < 20; i++) {
+                    math.scope(() => {
+                        const cost = session.train(
+                            costTensor, feedEntries, 50, optimizer, CostReduction.MEAN)
+
+                        console.log('last average cost (' + i + '): ' + cost.get())
+                    })
+                }
 
 
             })
@@ -96,34 +104,10 @@ export default class Train {
 
     static getAllData(training: boolean = true): Promise<any> {
 
-        const axiosInstance = axios.create({
-            baseURL: 'http://localhost:5000',
-            timeout: 30000,
-            headers: {
-                'Access-Control-Allow-Origin': 'localhost'
-            }
-        })
+        const type: string = training ? 'Training' : 'Test'
 
-        const type: string = training ? 'TRAINING' : 'TEST'
-
-        return axiosInstance.get(`/getAllData?type=${type}`)
+        return axios.get(`/getAll${type}Data`)
             .then((response) => response)
-            .catch((error) => console.log(error))
-
-    }
-
-    static getBatch(): Promise<any> {
-
-        const axiosInstance = axios.create({
-            baseURL: 'http://localhost:5000',
-            timeout: 30000,
-            headers: {
-                'Access-Control-Allow-Origin': 'localhost'
-            }
-        })
-
-        return axiosInstance.get(`/?batchsize=${Train.BATCH_SIZE}`)
-            .then((response) => console.log(response))
             .catch((error) => console.log(error))
 
     }

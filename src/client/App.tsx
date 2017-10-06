@@ -1,16 +1,19 @@
 import * as React from 'react'
 import Train from './train'
 
-interface MyState {
-    nn: any,
-    guessedString: string
-    lastTen: string[]
+interface Props {
+
+}
+interface State {
 }
 
-class App extends React.Component <any, MyState> {
+class App extends React.Component <Props, State> {
 
-    constructor(props: any) {
+    constructor(props: Props) {
         super(props)
+
+        this.state = {
+        }
 
     }
 

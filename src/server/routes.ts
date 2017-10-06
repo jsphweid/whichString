@@ -3,34 +3,70 @@ const { join } = require('path')
 const jsonfile = require('jsonfile')
 const path = require('path')
 import { Array1D } from 'deeplearn'
-const whichVersion = 'buf2048_fft1024_h55348_v1'
-const basePath = '/tmp/whichString/data'
-const trainingInputs: Array1D[] = jsonfile.readFileSync(join(basePath, whichVersion, 'data_training.json')).map((item: number[]) => Array1D.new(item))
-const trainingLabels: Array1D[] = jsonfile.readFileSync(join(basePath, whichVersion, 'labels_training.json')).map((item: number[]) => Array1D.new(item))
-const testInputs: Array1D[] = jsonfile.readFileSync(join(basePath, whichVersion, 'data_test.json')).map((item: number[]) => Array1D.new(item))
-const testLabels: Array1D[] = jsonfile.readFileSync(join(basePath, whichVersion, 'labels_test.json')).map((item: number[]) => Array1D.new(item))
 
+interface allData {
+    trainingInputs: Array1D[] | null
+    trainingLabels: Array1D[] | null
+    testInputs: Array1D[] | null
+    testLabels: Array1D[] | null
+}
+
+type Request = express.Request
+type Response = express.Response
+
+const possibleData: allData = {
+    trainingInputs: null,
+    trainingLabels: null,
+    testInputs: null,
+    testLabels: null
+}
+
+const isDev: boolean = process.env.NODE_ENV === 'development'
+
+const transformArr = (item: number[]) => Array1D.new(Float32Array.from(item))
+
+if (isDev) {
+
+    const whichVersion = 'buf2048_fft1024_h55348_v1'
+    const basePath = '/tmp/whichString/data'
+
+    possibleData.trainingInputs = jsonfile.readFileSync(join(basePath, whichVersion, 'data_training.json'))//.map(transformArr)
+    possibleData.trainingLabels = jsonfile.readFileSync(join(basePath, whichVersion, 'labels_training.json'))//.map(transformArr)
+    possibleData.testInputs = jsonfile.readFileSync(join(basePath, whichVersion, 'data_test.json'))//.map(transformArr)
+    possibleData.testLabels = jsonfile.readFileSync(join(basePath, whichVersion, 'labels_test.json'))//.map(transformArr)
+
+}
 
 import { RenderReact } from './render'
-import { BatchType } from '../shared/types'
 
 const getAssetPaths = () => {
 
-    return (process.env.NODE_ENV !== 'development')
-        ? jsonfile.readFileSync(join(__dirname, 'webpack-assets.json'))
-        : jsonfile.readFileSync(join(__dirname, '..', 'build', 'webpack-assets.json'))
+    return (isDev)
+        ? jsonfile.readFileSync(join(__dirname, '..', 'build', 'webpack-assets.json'))
+        : jsonfile.readFileSync(join(__dirname, 'webpack-assets.json'))
 
 }
 
 export default (app: express.Application) => {
 
-    app.get('/getAllTrainingData', (req: any, res:any): BatchType => ({ inputs: trainingInputs, labels: trainingLabels }))
-    app.get('/getAllTestData', (req: any, res:any): BatchType => ({ inputs: testInputs, labels: testLabels }))
+    const localOnlyMessage: string = 'This data is only available when running locally.'
 
-    app.get('*', (req, res) => {
+    app.get('/getAllTrainingData', (req: Request, res: Response): Response => {
+        return isDev
+            ? res.status(200).json({ inputs: possibleData.trainingInputs, labels: possibleData.trainingLabels })
+            : res.status(400).json({ message: localOnlyMessage })
+    })
+
+    app.get('/getAllTestData', (req: Request, res: Response): Response => {
+        return isDev
+            ? res.status(200).json({ inputs: possibleData.testInputs, labels: possibleData.testLabels })
+            : res.status(400).json({ message: localOnlyMessage })
+    })
+
+    app.get('*', (req: Request, res: Response): Response => {
 
         const html: string = RenderReact(req.url, getAssetPaths())
-        res.status(200).send(html)
+        return res.status(200).send(html)
 
     })
 

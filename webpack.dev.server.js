@@ -9,7 +9,7 @@ module.exports = {
     context: srcPath,
     entry: [
         'webpack/hot/poll?1000',
-        './server/server.ts'
+        './server/index.ts'
     ],
     watch: true,
     target: 'node',
@@ -30,7 +30,8 @@ module.exports = {
                 test: /\.tsx?$/,
                 exclude: /node_modules/,
                 loaders: ['awesome-typescript-loader']
-            }
+            },
+            { test:  /\.json$/, loader: 'json-loader' }
         ]
     },
     externals: nodeExternals({
