@@ -132,6 +132,26 @@ console.log('start')
                     // where data.values (find one that equals 1) is the string that it has guessed...
                     // find way to persist the weights
 
+                    // TODO:
+                    // save checkpoint
+                    // load checkpoint to cloud? (look at difference to TF)
+                    // load checkpoint below
+                    // on the loop, use an already created math context / instance to get the logits => infer manually
+                    // get an average
+                    // display
+                    // auto-correlate for pitch
+
+
+                    // loadVariables() {
+                    //     return new Promise((resolve, reject) => {
+                    //         const checkpointLoader =
+                    //             new CheckpointLoader(GOOGLE_CLOUD_STORAGE_DIR + 'squeezenet1_1/');
+                    //         checkpointLoader.getAllVariables().then(variables => {
+                    //             this.variables = variables;
+                    //             resolve();
+                    //         });
+                    //     });
+
 
 
 
