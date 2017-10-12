@@ -23,8 +23,6 @@ const possibleData: allData = {
 
 const isDev: boolean = process.env.NODE_ENV === 'development'
 
-const transformArr = (item: number[]) => Array1D.new(Float32Array.from(item))
-
 if (isDev) {
 
     const whichVersion = 'buf2048_fft1024_h55348_v1'
@@ -51,7 +49,7 @@ export default (app: express.Application) => {
 
     const localOnlyMessage: string = 'This data is only available when running locally.'
 
-    app.get('/getAllTrainingData', (req: Request, res: Response): Response => {
+    app.get('/getAllData', (req: Request, res: Response): Response => {
         return isDev
             ? res.status(200).json({
                 inputs: possibleData.trainingInputs,
@@ -61,12 +59,6 @@ export default (app: express.Application) => {
             })
             : res.status(400).json({ message: localOnlyMessage })
     })
-
-    // app.get('/getAllTestData', (req: Request, res: Response): Response => {
-    //     return isDev
-    //         ? res.status(200).json({ testInputs: possibleData.testInputs, testLabels: possibleData.testLabels })
-    //         : res.status(400).json({ message: localOnlyMessage })
-    // })
 
     app.get('*', (req: Request, res: Response): Response => {
 

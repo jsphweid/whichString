@@ -2,10 +2,13 @@
   "name": "whichstring",
   "version": "0.1.0",
   "private": true,
-  "dependencies": {},
+  "dependencies": {
+    "compression": "^1.7.1"
+  },
   "devDependencies": {
     "@types/axios": "^0.14.0",
     "@types/body-parser": "^1.16.4",
+    "@types/compression": "0.0.34",
     "@types/enzyme": "^2.8.9",
     "@types/express": "^4.0.36",
     "@types/jest": "^20.0.7",
@@ -32,9 +35,10 @@
     "webpack-node-externals": "^1.6.0"
   },
   "scripts": {
-    "start": "rm -rf ./build && npm-run-all --parallel start:server start:client",
+    "start": "rm -rf ./build && npm run start:runpython && npm-run-all --parallel start:server start:client",
     "start:client": "webpack-dev-server --config webpack.dev.client.js",
-    "start:server": "python src/python/python_setup.py && webpack --config webpack.dev.server.js",
+    "start:server": "webpack --config webpack.dev.server.js",
+    "start:runpython": "python src/python/python_setup.py",
     "build": "rm -rf ./dist && npm-run-all --parallel build:server build:client",
     "build:server": "webpack --config webpack.prod.server.js",
     "build:client": "webpack --config webpack.prod.client.config.js"

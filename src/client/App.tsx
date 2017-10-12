@@ -1,5 +1,6 @@
 import * as React from 'react'
-import Train from './train'
+import Trainer from './Trainer'
+import Model from "./model";
 
 interface Props {
 
@@ -17,6 +18,21 @@ class App extends React.Component <Props, State> {
 
     }
 
+    handleTrain() {
+
+        const model = new Model()
+        const trainer = new Trainer(model)
+        trainer.loadData()
+            .then(() => {
+
+                trainer.train()
+                const a = model.getVariables()
+                debugger
+
+            }).catch((err) => console.log(err))
+
+    }
+
     render() {
 
         return (
@@ -27,7 +43,7 @@ class App extends React.Component <Props, State> {
                 <p className="App-intro">
                     Play that violin!
                 </p>
-                <button onClick={Train.buildGraphAndStartTraining}>Train</button>
+                <button onClick={this.handleTrain}>Train</button>
             </div>
         )
     }
