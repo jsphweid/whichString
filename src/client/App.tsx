@@ -1,6 +1,6 @@
 import * as React from 'react'
 import Trainer from './Trainer'
-import Model from "./model";
+import Model from './model'
 
 interface Props {
 
@@ -26,8 +26,6 @@ class App extends React.Component <Props, State> {
             .then(() => {
 
                 trainer.train()
-                const a = model.getVariables()
-                debugger
 
             }).catch((err) => console.log(err))
 

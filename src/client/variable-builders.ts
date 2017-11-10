@@ -2,8 +2,10 @@ import {Array1D, Array2D, Array3D, Array4D, Graph} from 'deeplearn'
 
 export default class NodeBuilders {
 
+
     static buildVariable(g: Graph, shape: any, name: string) {
 
+        const a: Array1D = Array1D.new([1., 2., 3.])
         const mean: number = 0.01 // 0 is default
         const stddev: number = 0.1
 
