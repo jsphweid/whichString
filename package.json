@@ -38,7 +38,7 @@
     "start": "rm -rf ./build && npm run start:runpython && npm-run-all --parallel start:server start:client",
     "start:client": "webpack-dev-server --config webpack.dev.client.js",
     "start:server": "webpack --config webpack.dev.server.js",
-    "start:runpython": "python src/python/python_setup.py",
+    "build:model": "python src/python/python_setup.py",
     "build": "rm -rf ./dist && npm-run-all --parallel build:server build:client",
     "build:server": "webpack --config webpack.prod.server.js",
     "build:client": "webpack --config webpack.prod.client.config.js"

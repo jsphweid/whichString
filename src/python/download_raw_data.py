@@ -19,4 +19,4 @@ def maybe_download_files():
                 file_url = os.path.join(SOURCE_URL, folder_name, wav)
                 new_file_path, _ = urlretrieve(file_url, file_path)
                 statinfo = os.stat(new_file_path)
-                print('Successfully downloaded', file_path, statinfo.st_size, 'bytes.')
+                print('successfully downloaded', file_path, statinfo.st_size, 'bytes.')
