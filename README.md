@@ -16,5 +16,8 @@ I ran in a virtual python environment with 'virtualenv' using `source ~/tensorfl
     - train the data again random noise / random noises / and silence
 - take out parts of the violin signal that are not actually playing or too quiet to register...
 - make a smoothing array with expandable size and when it restarts on/off, reset to [4, 4, etc.]
+- will the web audio smoothing help?
+- still memory leaking?
+- need a way to take out silent parts of training data...
 
 ## python dependencies

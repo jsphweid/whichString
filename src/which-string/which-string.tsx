@@ -5,6 +5,7 @@ import { CheckpointLoader, Array1D } from 'deeplearn'
 import WhichStringModel from './model'
 
 import { SAMPLING_RATE } from '../common/constants'
+import FFTProcessor from './fft-processor'
 
 export interface WhichStringProps {
 	adaptive: AdaptiveType
@@ -51,7 +52,8 @@ export default class WhichString extends React.Component<WhichStringProps, Which
 			const audioContext: AudioContext = new AudioContext()
 			const microphone: MediaStreamAudioSourceNode = audioContext.createMediaStreamSource(stream)
 			const analyserNode: AnalyserNode = audioContext.createAnalyser()
-			analyserNode.fftSize = this.props.fftSize * 2
+			analyserNode.smoothingTimeConstant = 0
+			analyserNode.fftSize = this.props.fftSize * 4
 			microphone.connect(analyserNode)
 			this.process(audioContext, analyserNode)
 		}, (error) => this.setState({ error }))
@@ -59,11 +61,11 @@ export default class WhichString extends React.Component<WhichStringProps, Which
 	}
 
 	process = (audioContext: AudioContext, analyserNode: AnalyserNode) => {
-		const myDataArray: Uint8Array = new Uint8Array(analyserNode.frequencyBinCount)		
 		const loop: any = setInterval(() => {
 			if (this.state.model && this.state.listening) {
-				analyserNode.getByteFrequencyData(myDataArray)
-				const guess: number = this.state.model.infer(myDataArray)
+				const myDataArray: Float32Array = new Float32Array(analyserNode.frequencyBinCount)				
+				analyserNode.getFloatTimeDomainData(myDataArray)
+				const guess: number = this.state.model.infer(FFTProcessor.getMags(myDataArray))
 				this.setState({ string: guess })
 			}
 		}, SAMPLING_RATE / (this.props.fftSize * 2))
