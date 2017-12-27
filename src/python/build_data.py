@@ -63,11 +63,10 @@ def getHotEncodedList(string):
     elif string == 'z':
         return [0, 0, 0, 0, 1]
 
-def process_wav_to_lines_of_data(buffer_size, wavInfoObject):
+def process_wav_to_lines_of_data(fft_size, buffer_size, wavInfoObject):
     wavFile = wave.open(wavInfoObject["path"])
     wavFileAsIntArray = getChannelMultiplesOfBufferSize(wavFile, buffer_size)
     chunkedUp = splitListIntoChunks(wavFileAsIntArray, buffer_size)
-    fft_size = int(buffer_size / 2)
     chunkedUpFftMags = makeChunkedUpFFTFromChunks(fft_size, chunkedUp)
     file_as_lines = []
     for fftChunk in chunkedUpFftMags:
@@ -82,16 +81,16 @@ def getRandomIndexArrayWithLength(len):
     random.shuffle(ret)
     return ret
 
-def get_target_dir(buffer_size):
+def get_target_dir(fft_size, buffer_size):
     str_buffer_size = str(buffer_size)
-    str_fft_size = str(int(buffer_size / 2))
+    str_fft_size = str(fft_size)
     hash = get_hash_of_job()
     target_folder_name = 'buf' + str_buffer_size + '_fft' + str_fft_size + '_h' + hash + '_v' + str(VERSION)
     return target_folder_name
 
-def maybe_build_data_from_raw_data(buffer_size, training_quantity):
-    fft_size = int(buffer_size / 2)
-    target_folder_name = get_target_dir(buffer_size)
+def maybe_build_data_from_raw_data(fft_size, training_quantity):
+    buffer_size = int(fft_size * 2)
+    target_folder_name = get_target_dir(fft_size, buffer_size)
     target_dir = os.path.join(BASE_PATH_WITH_DATA, target_folder_name)
 
     if os.path.exists(target_dir):
@@ -103,7 +102,7 @@ def maybe_build_data_from_raw_data(buffer_size, training_quantity):
     all_lines_to_write = []
 
     for wav in get_list_of_wavs_to_process():
-        all_lines_to_write.append(process_wav_to_lines_of_data(buffer_size, wav))
+        all_lines_to_write.append(process_wav_to_lines_of_data(fft_size, buffer_size, wav))
     
     all_lines_to_write = [item for sublist in all_lines_to_write for item in sublist] # flatten
     random.shuffle(all_lines_to_write)

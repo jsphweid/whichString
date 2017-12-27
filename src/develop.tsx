@@ -15,6 +15,8 @@ export const adaptive: AdaptiveType = {
 ReactDOM.render(
     <WhichString
         adaptive={adaptive}
+        modelUrl={'.'}
+        fftSize={1024}
     />,
     document.getElementById('root')
 )

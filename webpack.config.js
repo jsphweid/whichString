@@ -1,6 +1,7 @@
 const webpack = require('webpack')
 const path = require('path')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
+const CopyWebpackPlugin = require('copy-webpack-plugin')
 
 module.exports = {
     devtool: "source-map",
@@ -15,12 +16,12 @@ module.exports = {
     devServer: {
         hot: true,
         port: 3000,
-        historyApiFallback: true
+        historyApiFallback: true,
+        contentBase: [path.resolve(__dirname, 'localModel')]
     },
     resolve: {
         extensions: [".ts", ".tsx", ".js", ".json"]
     },
-
     module: {
         rules: [
             {
@@ -54,6 +55,7 @@ module.exports = {
     },
 
     plugins: [
+        new CopyWebpackPlugin([ { from: './localModel', to: 'assets' } ]),
         new webpack.HotModuleReplacementPlugin(),
         new HtmlWebpackPlugin({
             hash: true,
