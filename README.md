@@ -15,5 +15,6 @@ I ran in a virtual python environment with 'virtualenv' using `source ~/tensorfl
 - probability that it is a violin at all... "I don't hear a violin..."
     - train the data again random noise / random noises / and silence
 - take out parts of the violin signal that are not actually playing or too quiet to register...
+- make a smoothing array with expandable size and when it restarts on/off, reset to [4, 4, etc.]
 
 ## python dependencies

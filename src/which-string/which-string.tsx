@@ -17,7 +17,8 @@ interface WhichStringState {
 	error: any
 	audioContext: AudioContext
 	analyserNode: AnalyserNode
-	loop: any
+	listening: boolean
+	string: number
 }
 
 export default class WhichString extends React.Component<WhichStringProps, WhichStringState> {
@@ -30,7 +31,8 @@ export default class WhichString extends React.Component<WhichStringProps, Which
 			error: null,
 			audioContext: null,
 			analyserNode: null,
-			loop: null
+			listening: true,
+			string: null
 		}
 
 	}
@@ -59,24 +61,32 @@ export default class WhichString extends React.Component<WhichStringProps, Which
 	process = (audioContext: AudioContext, analyserNode: AnalyserNode) => {
 		const myDataArray: Uint8Array = new Uint8Array(analyserNode.frequencyBinCount)		
 		const loop: any = setInterval(() => {
-			
-			if (this.state.model) {
+			if (this.state.model && this.state.listening) {
 				analyserNode.getByteFrequencyData(myDataArray)
 				const guess: number = this.state.model.infer(myDataArray)
-				console.log(guess);
+				this.setState({ string: guess })
 			}
 		}, SAMPLING_RATE / (this.props.fftSize * 2))
+	}
 
-		this.setState({ loop })
+	renderSquares() {
+		return [0, 1, 2, 3].map((num: number) => {
+			const activeClass: string = (num === this.state.string) ? 'ws-squares-square--active' : ''
+			return (
+				<div key={num} className={`ws-squares-square ${activeClass}`} />
+			)
+		})
 	}
 
 	render() {
 
 		return (
 			<div>
-				{this.state.model ? <h1>model loaded!!</h1> : <span>loading...</span>}
+				<div className="ws-squares">
+					{this.state.model ? this.renderSquares() : <span>loading...</span>}
+				</div>
 				{this.state.error ? <h1>error: {this.state.error}</h1> : null}
-				<button onClick={() => clearInterval(this.state.loop)}>STOP</button>
+				<button onClick={() => this.setState({ listening: !this.state.listening })}>STOP</button>
 			</div>
 		)
 

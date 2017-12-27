@@ -1,0 +1,14 @@
+.ws-squares {
+
+    .ws-squares-square {
+        display: inline-block;
+        height: 200px;
+        width: 200px;
+        border: 1px solid black;
+    }
+    
+    .ws-squares-square--active {
+        background: black
+    }
+
+}
