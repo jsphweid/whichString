@@ -19,5 +19,6 @@ I ran in a virtual python environment with 'virtualenv' using `source ~/tensorfl
 - will the web audio smoothing help?
 - still memory leaking?
 - need a way to take out silent parts of training data...
+- create a 'loading model' spinner and load weights on aws if not local
 
 ## python dependencies
