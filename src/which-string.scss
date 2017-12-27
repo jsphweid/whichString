@@ -1,0 +1,15 @@
+/* child components */
+@import 'which-string/which-string';
+
+/* common components */
+@import 'common/common';
+
+html, body, h1 {
+    height: 100%;
+    margin: 0;
+}
+  
+#root{
+    height: 100%;
+    width: 100%;
+}

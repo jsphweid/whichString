@@ -1,7 +1,7 @@
 import wave, numpy as np, math, random, os, json, hashlib
 from scipy.fftpack import fft
 from constants import BASE_PATH, BASE_PATH_WITH_DATA, BASE_PATH_WITH_RAW_DATA, SOURCE_URL, RAW_DATA_DICT
-
+random.seed(9001)
 # changes when the algorithm to process wavs change
 VERSION = 1
 
@@ -53,19 +53,20 @@ def makeChunkedUpFFTFromChunks(fft_size, chunksOfBuffers):
 
 def getHotEncodedList(string):
     if string == 'g':
-        return [1, 0, 0, 0]
+        return [1, 0, 0, 0, 0]
     elif string == 'd':
-        return [0, 1, 0, 0]
+        return [0, 1, 0, 0, 0]
     elif string == 'a':
-        return [0, 0, 1, 0]
+        return [0, 0, 1, 0, 0]
     elif string == 'e':
-        return [0, 0, 0, 1]
+        return [0, 0, 0, 1, 0]
+    elif string == 'z':
+        return [0, 0, 0, 0, 1]
 
-def process_wav_to_lines_of_data(buffer_size, wavInfoObject):
+def process_wav_to_lines_of_data(fft_size, buffer_size, wavInfoObject):
     wavFile = wave.open(wavInfoObject["path"])
     wavFileAsIntArray = getChannelMultiplesOfBufferSize(wavFile, buffer_size)
     chunkedUp = splitListIntoChunks(wavFileAsIntArray, buffer_size)
-    fft_size = int(buffer_size / 2)
     chunkedUpFftMags = makeChunkedUpFFTFromChunks(fft_size, chunkedUp)
     file_as_lines = []
     for fftChunk in chunkedUpFftMags:
@@ -80,28 +81,28 @@ def getRandomIndexArrayWithLength(len):
     random.shuffle(ret)
     return ret
 
-def get_target_dir(buffer_size):
+def get_target_dir(fft_size, buffer_size):
     str_buffer_size = str(buffer_size)
-    str_fft_size = str(int(buffer_size / 2))
+    str_fft_size = str(fft_size)
     hash = get_hash_of_job()
     target_folder_name = 'buf' + str_buffer_size + '_fft' + str_fft_size + '_h' + hash + '_v' + str(VERSION)
-    return os.path.join(BASE_PATH_WITH_DATA, target_folder_name)
+    return target_folder_name
 
-def maybe_build_data_from_raw_data(buffer_size, training_quantity):
-    fft_size = int(buffer_size / 2)
-    target_folder_name = get_target_dir(buffer_size)
+def maybe_build_data_from_raw_data(fft_size, training_quantity):
+    buffer_size = int(fft_size * 2)
+    target_folder_name = get_target_dir(fft_size, buffer_size)
     target_dir = os.path.join(BASE_PATH_WITH_DATA, target_folder_name)
 
     if os.path.exists(target_dir):
-        print('Looks like you\'ve already processed the files as ' + target_dir + ' already exists')
-        return
+        print('looks like you\'ve already processed the files as ' + target_dir + ' already exists...')
+        return target_folder_name
 
     os.makedirs(target_dir)
 
     all_lines_to_write = []
 
     for wav in get_list_of_wavs_to_process():
-        all_lines_to_write.append(process_wav_to_lines_of_data(buffer_size, wav))
+        all_lines_to_write.append(process_wav_to_lines_of_data(fft_size, buffer_size, wav))
     
     all_lines_to_write = [item for sublist in all_lines_to_write for item in sublist] # flatten
     random.shuffle(all_lines_to_write)
@@ -140,3 +141,5 @@ def maybe_build_data_from_raw_data(buffer_size, training_quantity):
             line = all_lines_to_write[randomIndexArray[i]]
             test_labels_tensor.append(line[0])
         json.dump(test_labels_tensor, file)
+
+    return target_folder_name

@@ -8,6 +8,7 @@
 
 # production
 /build
+/dist
 
 # misc
 .DS_Store
@@ -23,3 +24,6 @@ yarn-error.log*
 # intellij
 .idea/
 *.iml
+__pycache__/
+
+localModel/
