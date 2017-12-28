@@ -7,7 +7,6 @@ from constants import BASE_PATH, BASE_PATH_WITH_DATA
 FFT_SIZE = 512
 CONV_SIZE = 5
 NUM_LABELS = 5
-POOLING_SIZE = 2
 
 def next_batch(data, batch_size):
     idx = np.arange(0 , len(data["training_data"]))
@@ -34,32 +33,27 @@ def bias_variable(shape, name=None):
 def conv1d(x, W):
   return tf.nn.conv1d(x, W, stride=1, padding='VALID')
 
-def max_pool(x):
-  return tf.nn.pool(x, window_shape=[POOLING_SIZE], strides=[POOLING_SIZE], pooling_type="MAX", padding='VALID')
-
 x_ = tf.placeholder(tf.float32, shape=[None, FFT_SIZE], name="x_")
 y_ = tf.placeholder(tf.float32, shape=[None, NUM_LABELS], name="y_")
 keep_prob = tf.placeholder(tf.float32)
 
 x_reshaped = tf.reshape(x_, [-1, FFT_SIZE, 1])
 
-######## FIRST CONVOLUTIONAL / POOLING LAYER
+######## FIRST CONVOLUTIONAL LAYER
 FIRST_LAYER_SIZE = 32
 W_conv1 = weight_variable([CONV_SIZE, 1, FIRST_LAYER_SIZE], 'weight-conv1')
 b_conv1 = bias_variable([FIRST_LAYER_SIZE], 'bias-conv1')
 h_conv1 = tf.nn.relu(conv1d(x_reshaped, W_conv1) + b_conv1)
-# h_pool1 = max_pool(h_conv1)
 
-SIZE_AFTER_FIRST = int((FFT_SIZE - CONV_SIZE + 1)) # where does the 2 come from
+SIZE_AFTER_FIRST = FFT_SIZE - CONV_SIZE + 1
 
-######## SECOND CONVOLUTIONAL / POOLING LAYER
+######## SECOND CONVOLUTIONAL LAYER
 SECOND_LAYER_SIZE = 64
 W_conv2 = weight_variable([CONV_SIZE, FIRST_LAYER_SIZE, SECOND_LAYER_SIZE], 'weight-conv2')
 b_conv2 = bias_variable([SECOND_LAYER_SIZE], 'bias-conv2')
 h_conv2 = tf.nn.relu(conv1d(h_conv1, W_conv2) + b_conv2)
-# h_pool2 = max_pool(h_conv2)
 
-SIZE_AFTER_SECOND = int((SIZE_AFTER_FIRST - CONV_SIZE + 1))
+SIZE_AFTER_SECOND = SIZE_AFTER_FIRST - CONV_SIZE + 1
 COMBINED_SIZE = SIZE_AFTER_SECOND * SECOND_LAYER_SIZE
 
 ######## FULLY CONNECTED LAYER
