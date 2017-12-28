@@ -13,7 +13,7 @@ export interface WhichStringProps {
 	fftSize: FFTSizeType
 }
 
-interface WhichStringState {
+export interface WhichStringState {
 	model: WhichStringModel
 	error: any
 	audioContext: AudioContext
