@@ -23,7 +23,7 @@ export default class WhichStringModel {
 		this.math = ENV.math
 		this.fftSize = fftSize
 
-		this.finalLayerSize = (this.fftSize - 49 - 49) * 64 // minus 2 convolutional layers times output shape of wConv2
+		this.finalLayerSize = (this.fftSize - 4 - 4) * 64 // minus 2 convolutional layers times output shape of wConv2
 
 		this.wConv1 = loadedVars['weight-conv1'] as Array3D
 		this.bConv1 = loadedVars['bias-conv1'] as Array1D

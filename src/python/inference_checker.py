@@ -19,7 +19,7 @@ from train_model import one_inference
 sess = tf.Session()
 sess.run(tf.global_variables_initializer())
 saver = tf.train.Saver()
-saver.restore(sess, "/Users/josephweidinger/Downloads/a-0.889586_buf1024_fft512_h350b3_v1")
+saver.restore(sess, "/Users/josephweidinger/Downloads/a-0.95351_buf1024_fft512_h350b3_v1")
  
 audio = pyaudio.PyAudio()
 
@@ -28,7 +28,7 @@ def callback(in_data, frame_count, time_info, status):
     samples = numpy.fromstring(in_data, dtype=aubio.float_type)
     input_fft = abs(numpy.fft.fft(decoded_signal_buffer))[0:FFT_SIZE]
 
-    print('input_fft', input_fft)
+    # print('input_fft', input_fft)
     feed_dict = { "x_:0": [input_fft], "keep_prob:0": 1.0 }
     guess = sess.run(one_inference, feed_dict=feed_dict)
     print(guess, pDetection(samples)[0])
