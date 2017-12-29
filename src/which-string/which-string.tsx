@@ -1,5 +1,6 @@
 import * as React from 'react'
 import { AdaptiveType, FFTSizeType } from '../common/types'
+import { getMostCommonElementInArray } from '../common/helpers'
 
 import { CheckpointLoader, Array1D } from 'deeplearn'
 import WhichStringModel from './model'
@@ -19,7 +20,8 @@ export interface WhichStringState {
 	audioContext: AudioContext
 	analyserNode: AnalyserNode
 	listening: boolean
-	string: number
+	guesses: number[]
+	numToSmooth: number
 }
 
 export default class WhichString extends React.Component<WhichStringProps, WhichStringState> {
@@ -33,7 +35,8 @@ export default class WhichString extends React.Component<WhichStringProps, Which
 			audioContext: null,
 			analyserNode: null,
 			listening: true,
-			string: null
+			guesses: [],
+			numToSmooth: 3
 		}
 
 	}
@@ -60,35 +63,54 @@ export default class WhichString extends React.Component<WhichStringProps, Which
 		
 	}
 
-	process = (audioContext: AudioContext, analyserNode: AnalyserNode) => {
+	addToAndUpdateGuesses = (guess: number): void => {
+		let newGuesses: number[] = this.state.guesses.slice()
+		newGuesses.push(guess)
+		newGuesses = newGuesses.slice(this.state.numToSmooth * -1)
+		this.setState({ guesses: newGuesses })
+	}
+
+	process = (audioContext: AudioContext, analyserNode: AnalyserNode): void => {
 		const loop: any = setInterval(() => {
 			if (this.state.model && this.state.listening) {
 				const myDataArray: Float32Array = new Float32Array(analyserNode.frequencyBinCount)				
 				analyserNode.getFloatTimeDomainData(myDataArray)
 				const guess: number = this.state.model.infer(FFTProcessor.getMags(myDataArray))
-				this.setState({ string: guess })
+				this.addToAndUpdateGuesses(guess)
 			}
 		}, SAMPLING_RATE / (this.props.fftSize * 2))
 	}
 
-	renderSquares() {
+	renderSquares(string: number): JSX.Element[] {
 		return [0, 1, 2, 3].map((num: number) => {
-			const activeClass: string = (num === this.state.string) ? 'ws-squares-square--active' : ''
+			const activeClass: string = (num === string) ? 'ws-squares-square--active' : ''
 			return (
 				<div key={num} className={`ws-squares-square ${activeClass}`} />
 			)
 		})
 	}
 
+	updateNumToSmooth = (val: 1 | -1): void => {
+		const newNumToSmooth: number = this.state.numToSmooth + val
+		if (newNumToSmooth > 0 && newNumToSmooth <= 20) {
+			this.setState({ numToSmooth: newNumToSmooth })
+		}
+	}
+
 	render() {
+
+		const averagedString: number = getMostCommonElementInArray(this.state.guesses)
 
 		return (
 			<div>
 				<div className="ws-squares">
-					{this.state.model ? this.renderSquares() : <span>loading...</span>}
+					{this.state.model ? this.renderSquares(averagedString) : <span>loading...</span>}
 				</div>
 				{this.state.error ? <h1>error: {this.state.error}</h1> : null}
-				<button onClick={() => this.setState({ listening: !this.state.listening })}>STOP</button>
+				<span>smoothing number: {this.state.numToSmooth}</span>
+				<button onClick={() => this.updateNumToSmooth(1)}>Smooth More</button>
+				<button onClick={() => this.updateNumToSmooth(-1)}>Smooth Less</button>
+				<button onClick={() => this.setState({ listening: !this.state.listening })}>{this.state.listening ? 'OFF' : 'ON'}</button>
 			</div>
 		)
 
