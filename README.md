@@ -22,3 +22,4 @@ I ran in a virtual python environment with 'virtualenv' using `source ~/tensorfl
 - create a 'loading model' spinner and load weights on aws if not local
 
 ## python dependencies
+tensorflow, numpy, portaudio / pyaudio

@@ -8,15 +8,15 @@ import { WhichString } from './index'
 import { AdaptiveType } from './common/types'
 
 export const adaptive: AdaptiveType = {
-    phone: false,
-    tablet: false
+	phone: false,
+	tablet: false
 }
 
 ReactDOM.render(
     <WhichString
         adaptive={adaptive}
         modelUrl={'.'}
-        fftSize={1024}
+        fftSize={512}
     />,
     document.getElementById('root')
 )

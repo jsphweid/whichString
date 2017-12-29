@@ -35,7 +35,6 @@ def conv1d(x, W):
 
 x_ = tf.placeholder(tf.float32, shape=[None, FFT_SIZE], name="x_")
 y_ = tf.placeholder(tf.float32, shape=[None, NUM_LABELS], name="y_")
-keep_prob = tf.placeholder(tf.float32)
 
 x_reshaped = tf.reshape(x_, [-1, FFT_SIZE, 1])
 
@@ -64,7 +63,8 @@ h_conv2_flat = tf.reshape(h_conv2, [-1, COMBINED_SIZE])
 h_fc1 = tf.nn.relu(tf.matmul(h_conv2_flat, W_fc1) + b_fc1)
 
 ######## DROPOUT LAYER
-keep_prob = tf.placeholder(tf.float32)
+keep_prob = tf.placeholder(tf.float32, name="keep_prob")
+
 h_fc1_drop = tf.nn.dropout(h_fc1, keep_prob)
 
 ######## READOUT LAYER
@@ -78,6 +78,9 @@ cross_entropy = tf.reduce_mean(
 train_step = tf.train.AdamOptimizer(1e-4).minimize(cross_entropy)
 correct_prediction = tf.equal(tf.argmax(y_conv, 1), tf.argmax(y_, 1))
 accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
+
+# one_inference = tf.argmax(tf.nn.softmax(y_conv))
+one_inference = y_conv
 
 def train_model(target_folder_name):
 
@@ -125,5 +128,3 @@ def train_model(target_folder_name):
         
 
         print(sess.run(accuracy, feed_dict=feed_dict_test))
-    
-

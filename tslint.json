@@ -9,7 +9,7 @@
     "rules": {
         "align": false,
         "semicolon": [true, "never"],
-        "ter-indent": [true, "tab"],
+        "ter-indent": false,
         "trailing-comma": [true, { "multiline": "never", "singleline": "never" }],
         "strict-boolean-expressions": false,
         "max-line-length": [true, 165],

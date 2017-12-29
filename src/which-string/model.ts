@@ -7,10 +7,12 @@ export default class WhichStringModel {
 	private fftSize: FFTSizeType
 
 	private math: NDArrayMath
+    
+	private finalLayerSize: number
 
-	private wConv1: Array4D
+	private wConv1: Array3D
 	private bConv1: Array1D
-	private wConv2: Array4D
+	private wConv2: Array3D
 	private bConv2: Array1D
 	private wFc1: Array2D
 	private bFc1: Array1D
@@ -21,9 +23,11 @@ export default class WhichStringModel {
 		this.math = ENV.math
 		this.fftSize = fftSize
 
-		this.wConv1 = loadedVars['weight-conv1'] as Array4D
+		this.finalLayerSize = (this.fftSize - 49 - 49) * 64 // minus 2 convolutional layers times output shape of wConv2
+
+		this.wConv1 = loadedVars['weight-conv1'] as Array3D
 		this.bConv1 = loadedVars['bias-conv1'] as Array1D
-		this.wConv2 = loadedVars['weight-conv2'] as Array4D
+		this.wConv2 = loadedVars['weight-conv2'] as Array3D
 		this.bConv2 = loadedVars['bias-conv2'] as Array1D
 		this.wFc1 = loadedVars['weight-fully-connected1'] as Array2D
 		this.bFc1 = loadedVars['bias-fully-connected1'] as Array1D
@@ -32,29 +36,22 @@ export default class WhichStringModel {
 	}
 
 	public infer(rawX: Uint8Array): number {
-		const sqrtFft: number = Math.sqrt(this.fftSize)
 		const x: Array1D = Array1D.new(rawX)
-		const reshapedX: Array3D = x.reshape([sqrtFft, sqrtFft, 1]) as Array3D
-		const hConv1 = this.math.relu(this.conv2d(reshapedX, this.wConv1, this.bConv1))
-		const hPool1 = this.maxPool(hConv1)
-		const hConv2 = this.math.relu(this.conv2d(hPool1, this.wConv2, this.bConv2))
-		const hPool2 = this.maxPool(hConv2)
+		const reshapedX: Array2D = x.reshape([this.fftSize, 1]) as Array2D
+		const hConv1 = this.math.relu(this.conv1d(reshapedX, this.wConv1, this.bConv1)) as Array2D
+		const hConv2 = this.math.relu(this.conv1d(hConv1, this.wConv2, this.bConv2)) as Array2D
 
-        // when fft size is 1024, this is 4096
-		const hPool2Flat: Array1D = hPool2.reshape([4096]) as Array1D
+		const hPool2Flat: Array1D = hConv2.reshape([this.finalLayerSize]) as Array1D
 		const hFc1: Array1D = this.math.relu(this.math.add(this.math.vectorTimesMatrix(hPool2Flat, this.wFc1), this.bFc1)) as Array1D
 		const yConv: Array1D = this.math.add(this.math.vectorTimesMatrix(hFc1, this.wFc2), this.bFc) as Array1D
-		const result: Array1D = this.math.argMax(this.math.softmax(yConv)) as Array1D
+        const result: Array1D = this.math.argMax(this.math.softmax(yConv)) as Array1D
 		const resultValues: Int32Array = result.dataSync() as Int32Array
-		return resultValues[0]
+        console.log(resultValues[0])
+        return resultValues[0]
 	}
 
-	private conv2d(x: Array3D, W: Array4D, b: Array1D): Array3D {
-		return this.math.conv2d(x, W, b, [1, 1, 1, 1], 'same')
-	}
-
-	private maxPool(x: Array3D) {
-		return this.math.maxPool(x, [2, 2], [2, 2], 'same')
+	private conv1d(x: Array2D, W: Array3D, b: Array1D): Array2D {
+		return this.math.conv1d(x, W, b, 1, 'valid')
 	}
 
 }
