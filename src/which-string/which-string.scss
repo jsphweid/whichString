@@ -1,14 +1,10 @@
-.ws-squares {
 
-    .ws-squares-square {
-        display: inline-block;
-        height: 200px;
-        width: 200px;
-        border: 1px solid black;
-    }
-    
-    .ws-squares-square--active {
-        background: black
-    }
 
+.ws-violin-img {
+    width: 100%
+}
+
+.ws-active-string-line {
+    position: absolute;
+    border-bottom: 3px solid yellow;
 }

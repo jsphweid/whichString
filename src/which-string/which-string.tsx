@@ -1,11 +1,12 @@
 import * as React from 'react'
-import { AdaptiveType, FFTSizeType } from '../common/types'
-import { getMostCommonElementInArray } from '../common/helpers'
+import { AdaptiveType, FFTSizeType, BasicDimensionType, ViolinImgInfoType, ViolinImgInfoKeyType,
+	ViolinStringLengthType, ViolinPointType, StringLetterType } from '../common/types'
+import { getMostCommonElementInArray, getAllViolinImgInfo } from '../common/helpers'
 
 import { CheckpointLoader, Array1D } from 'deeplearn'
 import WhichStringModel from './model'
 
-import { SAMPLING_RATE } from '../common/constants'
+import { SAMPLING_RATE, ROTATION_DEGREES } from '../common/constants'
 import FFTProcessor from './fft-processor'
 
 export interface WhichStringProps {
@@ -22,6 +23,7 @@ export interface WhichStringState {
 	listening: boolean
 	guesses: number[]
 	numToSmooth: number
+	violinImgInfo: ViolinImgInfoType
 }
 
 export default class WhichString extends React.Component<WhichStringProps, WhichStringState> {
@@ -36,7 +38,8 @@ export default class WhichString extends React.Component<WhichStringProps, Which
 			analyserNode: null,
 			listening: true,
 			guesses: [],
-			numToSmooth: 3
+			numToSmooth: 3,
+			violinImgInfo: null
 		}
 
 	}
@@ -60,7 +63,7 @@ export default class WhichString extends React.Component<WhichStringProps, Which
 			microphone.connect(analyserNode)
 			this.process(audioContext, analyserNode)
 		}, (error) => this.setState({ error }))
-		
+
 	}
 
 	addToAndUpdateGuesses = (guess: number): void => {
@@ -80,7 +83,20 @@ export default class WhichString extends React.Component<WhichStringProps, Which
 			}
 		}, SAMPLING_RATE / (this.props.fftSize * 2))
 	}
+	
+	updateImageDimensions = (something: any): void => {
+		const { width } = document.querySelector('.ws-violin-img') as HTMLImageElement
+		const violinImgInfo: ViolinImgInfoType = getAllViolinImgInfo(width)
+		this.setState({ violinImgInfo })
+	}
 
+	updateNumToSmooth = (val: 1 | -1): void => {
+		const newNumToSmooth: number = this.state.numToSmooth + val
+		if (newNumToSmooth > 0 && newNumToSmooth <= 20) {
+			this.setState({ numToSmooth: newNumToSmooth })
+		}
+	}
+	
 	renderSquares(string: number): JSX.Element[] {
 		return [0, 1, 2, 3].map((num: number) => {
 			const activeClass: string = (num === string) ? 'ws-squares-square--active' : ''
@@ -90,11 +106,19 @@ export default class WhichString extends React.Component<WhichStringProps, Which
 		})
 	}
 
-	updateNumToSmooth = (val: 1 | -1): void => {
-		const newNumToSmooth: number = this.state.numToSmooth + val
-		if (newNumToSmooth > 0 && newNumToSmooth <= 20) {
-			this.setState({ numToSmooth: newNumToSmooth })
+	renderLine = (string: number): JSX.Element => {
+		if (!this.state.violinImgInfo || string === null || string === 4) return null
+		const stringLetter = ['g', 'd', 'a', 'e'][string] as StringLetterType
+		const lengthKey = stringLetter + 'Length' as ViolinStringLengthType
+		const bridgeKey = stringLetter + 'Bridge' as ViolinPointType
+		const centerKey = stringLetter + 'Center' as ViolinPointType
+		const style: any = {
+			width: `${this.state.violinImgInfo[lengthKey]}px`,
+			left: `${this.state.violinImgInfo[centerKey].x - (this.state.violinImgInfo[lengthKey] / 2)}px`,
+			top: `${this.state.violinImgInfo[centerKey].y}px`,
+			transform: `rotate(${ROTATION_DEGREES[stringLetter]}deg)`
 		}
+		return <div className="ws-active-string-line" style={style} />
 	}
 
 	render() {
@@ -102,10 +126,16 @@ export default class WhichString extends React.Component<WhichStringProps, Which
 		const averagedString: number = getMostCommonElementInArray(this.state.guesses)
 
 		return (
-			<div>
-				<div className="ws-squares">
-					{this.state.model ? this.renderSquares(averagedString) : <span>loading...</span>}
-				</div>
+			<div id="myCanvas">
+				{this.renderLine(averagedString)}
+				<img
+					className="ws-violin-img"
+					src="https://s3.us-east-2.amazonaws.com/which-string-samples/violinPicture.jpg"
+					alt="violin"
+					onLoad={this.updateImageDimensions.bind(this)}
+				/>
+				<span className="dottt" style={{ color: 'black', height: '5px', width: '5px', position: 'absolute' }} />
+
 				{this.state.error ? <h1>error: {this.state.error}</h1> : null}
 				<span>smoothing number: {this.state.numToSmooth}</span>
 				<button onClick={() => this.updateNumToSmooth(1)}>Smooth More</button>

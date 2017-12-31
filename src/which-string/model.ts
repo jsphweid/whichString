@@ -46,7 +46,6 @@ export default class WhichStringModel {
 		const yConv: Array1D = this.math.add(this.math.vectorTimesMatrix(hFc1, this.wFc2), this.bFc) as Array1D
         const result: Array1D = this.math.argMax(this.math.softmax(yConv)) as Array1D
 		const resultValues: Int32Array = result.dataSync() as Int32Array
-        console.log(resultValues[0])
         return resultValues[0]
 	}
 
