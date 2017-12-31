@@ -40,7 +40,7 @@ stream = audio.open(format=FORMAT, channels=CHANNELS, rate=SAMPLE_RATE, input=Tr
 stream.start_stream()
 
 while stream.is_active():
-    time.sleep(30)
+    time.sleep(90)
     stream.stop_stream()
 
 sess.close()

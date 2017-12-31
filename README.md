@@ -18,6 +18,8 @@ I ran in a virtual python environment with 'virtualenv' using `source ~/tensorfl
 - need a way to take out silent parts of training data besides audacity...
 - create a 'loading model' spinner and load weights on aws if not local
 - adjust screen size can somehow update width of state object??
+- pitchfinder types... / faster/better algorithm
+- better system of points (not all in one flattened object...?)
 
 ## python dependencies
 tensorflow, numpy, portaudio / pyaudio

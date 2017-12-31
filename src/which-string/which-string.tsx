@@ -1,12 +1,14 @@
 import * as React from 'react'
 import { AdaptiveType, FFTSizeType, BasicDimensionType, ViolinImgInfoType, ViolinImgInfoKeyType,
-	ViolinStringLengthType, ViolinPointType, StringLetterType } from '../common/types'
+	ViolinStringLengthType, ViolinPointType, StringLetterType, ViolinRawPointType } from '../common/types'
 import { getMostCommonElementInArray, getAllViolinImgInfo } from '../common/helpers'
+import * as PitchFinder from 'pitchfinder'
+const detectPitch = PitchFinder.AMDF()
 
 import { CheckpointLoader, Array1D } from 'deeplearn'
 import WhichStringModel from './model'
 
-import { SAMPLING_RATE, ROTATION_DEGREES } from '../common/constants'
+import { SAMPLING_RATE, ROTATION_DEGREES, VIOLIN_LOWEST_FREQ } from '../common/constants'
 import FFTProcessor from './fft-processor'
 
 export interface WhichStringProps {
@@ -24,6 +26,7 @@ export interface WhichStringState {
 	guesses: number[]
 	numToSmooth: number
 	violinImgInfo: ViolinImgInfoType
+	pitchGuess: number
 }
 
 export default class WhichString extends React.Component<WhichStringProps, WhichStringState> {
@@ -39,7 +42,8 @@ export default class WhichString extends React.Component<WhichStringProps, Which
 			listening: true,
 			guesses: [],
 			numToSmooth: 3,
-			violinImgInfo: null
+			violinImgInfo: null,
+			pitchGuess: null
 		}
 
 	}
@@ -66,11 +70,11 @@ export default class WhichString extends React.Component<WhichStringProps, Which
 
 	}
 
-	addToAndUpdateGuesses = (guess: number): void => {
+	addToAndUpdateGuesses = (stringGuessIndex: number, pitchGuess: number): void => {
 		let newGuesses: number[] = this.state.guesses.slice()
-		newGuesses.push(guess)
+		newGuesses.push(stringGuessIndex)
 		newGuesses = newGuesses.slice(this.state.numToSmooth * -1)
-		this.setState({ guesses: newGuesses })
+		this.setState({ pitchGuess, guesses: newGuesses })
 	}
 
 	process = (audioContext: AudioContext, analyserNode: AnalyserNode): void => {
@@ -79,7 +83,8 @@ export default class WhichString extends React.Component<WhichStringProps, Which
 				const myDataArray: Float32Array = new Float32Array(analyserNode.frequencyBinCount)				
 				analyserNode.getFloatTimeDomainData(myDataArray)
 				const guess: number = this.state.model.infer(FFTProcessor.getMags(myDataArray))
-				this.addToAndUpdateGuesses(guess)
+				detectPitch(myDataArray)
+				this.addToAndUpdateGuesses(guess, detectPitch(myDataArray))
 			}
 		}, SAMPLING_RATE / (this.props.fftSize * 2))
 	}
@@ -107,7 +112,7 @@ export default class WhichString extends React.Component<WhichStringProps, Which
 	}
 
 	renderLine = (string: number): JSX.Element => {
-		if (!this.state.violinImgInfo || string === null || string === 4) return null
+		if (!this.state.violinImgInfo || string === null || string === 4 || !this.state.pitchGuess) return null
 		const stringLetter = ['g', 'd', 'a', 'e'][string] as StringLetterType
 		const lengthKey = stringLetter + 'Length' as ViolinStringLengthType
 		const bridgeKey = stringLetter + 'Bridge' as ViolinPointType
@@ -120,6 +125,23 @@ export default class WhichString extends React.Component<WhichStringProps, Which
 		}
 		return <div className="ws-active-string-line" style={style} />
 	}
+	
+	renderDot = (string: number): JSX.Element => {
+		const { violinImgInfo, pitchGuess } = this.state
+		if (!violinImgInfo || string === null || string === 4 || !pitchGuess) return null
+		const stringLetter = ['g', 'd', 'a', 'e'][string] as StringLetterType
+		const lowestFreq: number = VIOLIN_LOWEST_FREQ[stringLetter]
+		const percentUpOnString: number = 1 - (lowestFreq / pitchGuess)
+		const bridgeKey = (stringLetter + 'Bridge') as ViolinRawPointType
+		const neckKey = (stringLetter + 'Neck') as ViolinRawPointType
+		const x: number = violinImgInfo[neckKey].x + ((violinImgInfo[bridgeKey].x - violinImgInfo[neckKey].x) * percentUpOnString)
+		const y: number = violinImgInfo[neckKey].y + ((violinImgInfo[bridgeKey].y - violinImgInfo[neckKey].y) * percentUpOnString)
+		const style: any = {
+			left: `${x}px`,
+			top: `${y}px`
+		}
+		return <div className="ws-active-string-dot" style={style} />
+	}
 
 	render() {
 
@@ -128,6 +150,7 @@ export default class WhichString extends React.Component<WhichStringProps, Which
 		return (
 			<div id="myCanvas">
 				{this.renderLine(averagedString)}
+				{this.renderDot(averagedString)}
 				<img
 					className="ws-violin-img"
 					src="https://s3.us-east-2.amazonaws.com/which-string-samples/violinPicture.jpg"

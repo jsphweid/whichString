@@ -6,6 +6,13 @@ export const SAMPLING_RATE: number = 44100
 export const VIOLIN_PIC_ORIGINAL_WIDTH: number = 2000
 const VIOLIN_PIC_ORIGINAL_HEIGHT: number = 1333
 
+export const VIOLIN_LOWEST_FREQ: { e: number, a: number, d: number, g: number } = {
+    e: 659.3,
+    a: 440,
+    d: 293.7,
+    g: 196
+}
+
 const VIOLIN_RAW_COORDS: ViolinRawCoordinatesType = {
     eNeck: { x: 328, y: VIOLIN_PIC_ORIGINAL_HEIGHT - 605 },
     aNeck: { x: 328, y: VIOLIN_PIC_ORIGINAL_HEIGHT - 592 },
