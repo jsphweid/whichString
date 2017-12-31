@@ -1,5 +1,4 @@
-import wave, numpy as np, math, random, os, json, hashlib
-from scipy.fftpack import fft
+import wave, numpy as np, math, random, os, json, hashlib, struct
 from constants import BASE_PATH, BASE_PATH_WITH_DATA, BASE_PATH_WITH_RAW_DATA, SOURCE_URL, RAW_DATA_DICT
 random.seed(9001)
 # changes when the algorithm to process wavs change
@@ -24,9 +23,9 @@ def get_hash_of_job():
 def getListFromWavFile(wavFile):
     totalFrames = wavFile.getnframes()
     wavFileBytesObject = wavFile.readframes(totalFrames)
-    wavFile.rewind()
-    wavFileAsIntArray = np.fromstring(wavFileBytesObject, 'Int16')
-    return wavFileAsIntArray
+    a = struct.unpack("%ih" % (wavFile.getnframes()* wavFile.getnchannels()), wavFileBytesObject)
+    a = [float(val) / pow(2, 15) for val in a]
+    return a
 
 def getChannelMultiplesOfBufferSize(wavFile, bufferSize):
     totalFrames = wavFile.getnframes()
@@ -47,8 +46,8 @@ def splitListIntoChunks(aList, chunkSize):
 def makeChunkedUpFFTFromChunks(fft_size, chunksOfBuffers):
     ret = []
     for chunk in chunksOfBuffers:
-        theFft = fft(chunk)
-        ret.append(np.abs(theFft)[0:fft_size])
+        theFft = np.fft.fft(chunk)
+        ret.append(abs(theFft)[0:fft_size])
     return ret
 
 def getHotEncodedList(string):

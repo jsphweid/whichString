@@ -4,11 +4,9 @@ import tensorflow as tf
 import os
 from constants import BASE_PATH, BASE_PATH_WITH_DATA
 
-FFT_SIZE = 1024
-SQRT_FFT = int(np.sqrt(FFT_SIZE))
+FFT_SIZE = 512
 CONV_SIZE = 5
 NUM_LABELS = 5
-POOLING_SIZE = 2
 
 def next_batch(data, batch_size):
     idx = np.arange(0 , len(data["training_data"]))
@@ -32,46 +30,41 @@ def bias_variable(shape, name=None):
     else:
         return tf.Variable(initial)
 
-def conv2d(x, W):
-  return tf.nn.conv2d(x, W, strides=[1, 1, 1, 1], padding='SAME')
-def max_pool_2x2(x):
-  return tf.nn.max_pool(x, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='SAME')
-
+def conv1d(x, W):
+  return tf.nn.conv1d(x, W, stride=1, padding='VALID')
 
 x_ = tf.placeholder(tf.float32, shape=[None, FFT_SIZE], name="x_")
 y_ = tf.placeholder(tf.float32, shape=[None, NUM_LABELS], name="y_")
-keep_prob = tf.placeholder(tf.float32)
 
-x_reshaped = tf.reshape(x_, [-1, SQRT_FFT, SQRT_FFT, 1])
+x_reshaped = tf.reshape(x_, [-1, FFT_SIZE, 1])
 
-######## FIRST CONVOLUTIONAL / POOLING LAYER
+######## FIRST CONVOLUTIONAL LAYER
 FIRST_LAYER_SIZE = 32
-W_conv1 = weight_variable([CONV_SIZE, CONV_SIZE, 1, FIRST_LAYER_SIZE], 'weight-conv1')
+W_conv1 = weight_variable([CONV_SIZE, 1, FIRST_LAYER_SIZE], 'weight-conv1')
 b_conv1 = bias_variable([FIRST_LAYER_SIZE], 'bias-conv1')
-h_conv1 = tf.nn.relu(conv2d(x_reshaped, W_conv1) + b_conv1)
-h_pool1 = max_pool_2x2(h_conv1)
+h_conv1 = tf.nn.relu(conv1d(x_reshaped, W_conv1) + b_conv1)
 
-# SIZE_AFTER_FIRST = int((FFT_SIZE - CONV_SIZE + 1) / POOLING_SIZE)
+SIZE_AFTER_FIRST = FFT_SIZE - CONV_SIZE + 1
 
-######## SECOND CONVOLUTIONAL / POOLING LAYER
+######## SECOND CONVOLUTIONAL LAYER
 SECOND_LAYER_SIZE = 64
-W_conv2 = weight_variable([CONV_SIZE, CONV_SIZE, FIRST_LAYER_SIZE, SECOND_LAYER_SIZE], 'weight-conv2')
+W_conv2 = weight_variable([CONV_SIZE, FIRST_LAYER_SIZE, SECOND_LAYER_SIZE], 'weight-conv2')
 b_conv2 = bias_variable([SECOND_LAYER_SIZE], 'bias-conv2')
-h_conv2 = tf.nn.relu(conv2d(h_pool1, W_conv2) + b_conv2)
-h_pool2 = max_pool_2x2(h_conv2)
+h_conv2 = tf.nn.relu(conv1d(h_conv1, W_conv2) + b_conv2)
 
-SIZE_AFTER_SECOND = int((SQRT_FFT / 4) ** 2)
+SIZE_AFTER_SECOND = SIZE_AFTER_FIRST - CONV_SIZE + 1
 COMBINED_SIZE = SIZE_AFTER_SECOND * SECOND_LAYER_SIZE
 
 ######## FULLY CONNECTED LAYER
 FULLY_CONNECTED_SIZE = 1024
 W_fc1 = weight_variable([COMBINED_SIZE, FULLY_CONNECTED_SIZE], 'weight-fully-connected1')
 b_fc1 = bias_variable([FULLY_CONNECTED_SIZE], 'bias-fully-connected1')
-h_pool2_flat = tf.reshape(h_pool2, [-1, COMBINED_SIZE])
-h_fc1 = tf.nn.relu(tf.matmul(h_pool2_flat, W_fc1) + b_fc1)
+h_conv2_flat = tf.reshape(h_conv2, [-1, COMBINED_SIZE])
+h_fc1 = tf.nn.relu(tf.matmul(h_conv2_flat, W_fc1) + b_fc1)
 
 ######## DROPOUT LAYER
-keep_prob = tf.placeholder(tf.float32)
+keep_prob = tf.placeholder(tf.float32, name="keep_prob")
+
 h_fc1_drop = tf.nn.dropout(h_fc1, keep_prob)
 
 ######## READOUT LAYER
@@ -85,6 +78,9 @@ cross_entropy = tf.reduce_mean(
 train_step = tf.train.AdamOptimizer(1e-4).minimize(cross_entropy)
 correct_prediction = tf.equal(tf.argmax(y_conv, 1), tf.argmax(y_, 1))
 accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
+
+one_inference = tf.argmax(tf.nn.softmax(y_conv), 1)
+# one_inference = y_conv
 
 def train_model(target_folder_name):
 
@@ -111,7 +107,7 @@ def train_model(target_folder_name):
 
         highest_accuracy = 0
 
-        for i in range(10000):
+        for i in range(100000):
             batch_xs, batch_ys = next_batch(training_obj, 50)
             feed_dict_train = { x_: batch_xs, y_: batch_ys, keep_prob: 0.5 }
             sess.run(train_step, feed_dict=feed_dict_train)
@@ -132,5 +128,3 @@ def train_model(target_folder_name):
         
 
         print(sess.run(accuracy, feed_dict=feed_dict_test))
-    
-

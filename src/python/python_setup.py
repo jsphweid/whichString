@@ -9,7 +9,7 @@ print("downloading wavs if they haven't already been downloaded...")
 maybe_download_files()
 
 print("building out training and test data from the raw wav files...")
-target_folder_name = maybe_build_data_from_raw_data(1024, 0.8)
+target_folder_name = maybe_build_data_from_raw_data(512, 0.8)
 
 print("training model...")
 train_model(target_folder_name)
