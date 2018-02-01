@@ -143,12 +143,22 @@ export default class WhichString extends React.Component<WhichStringProps, Which
 		return <div className="ws-active-string-dot" style={style} />
 	}
 
+	renderTitle = (): JSX.Element => {
+		return (
+			<div className="ws-title">
+				<h1>whichString</h1>
+				<p>Play on the violin and see the model work!</p>
+			</div>
+		)
+	}
+
 	render() {
 
 		const averagedString: number = getMostCommonElementInArray(this.state.guesses)
 
 		return (
-			<div id="myCanvas">
+			<div className="ws">
+				{this.renderTitle()}
 				{this.renderLine(averagedString)}
 				{this.renderDot(averagedString)}
 				<img

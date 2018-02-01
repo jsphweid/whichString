@@ -71,7 +71,7 @@
     "build:assets": "cp -R src/assets dist/assets",
     "build:sass": "node-sass src/whichstring.scss dist/whichstring.css",
     "build:model": "python src/python/python_setup.py",
-    "build:portmodel": "python ./scripts/dump_checkpoints/dump_checkpoint_vars.py --model_type=tensorflow --output_dir=localModel/ --checkpoint_file=/var/tmp/whichString/models/a-0.95136_buf1024_fft512_hd8c83_v1",
+    "build:portmodel": "python ./src/python/dump_checkpoints/dump_checkpoint_vars.py --model_type=tensorflow --output_dir=localModel/ --checkpoint_file=/var/tmp/whichString/models/a-0.95351_buf1024_fft512_h350b3_v1",
     "prepublish": "npm run build",
     "release:major": "npm run test && npm version major && npm publish",
     "release:minor": "npm run test && npm version minor && npm publish",
