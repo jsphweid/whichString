@@ -154,7 +154,7 @@ export default class WhichString extends React.Component<WhichStringProps, Which
 
 	render() {
 
-		const averagedString: number = 0 //getMostCommonElementInArray(this.state.guesses)
+		const averagedString: number = getMostCommonElementInArray(this.state.guesses)
 
 		return (
 			<div className="ws">
