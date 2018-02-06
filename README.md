@@ -1,14 +1,17 @@
 # Which String
 
 ### build
-Requires these dependencies (I'd recommend making a virtualenv):
+Requires these dependencies (I'd recommend making a virtualenv -- see below):
  - tensorflow -> https://www.tensorflow.org/install/
  - python 3+ (python dependencies -> tensorflow, numpy, portaudio / pyaudio)
 
 `npm install` - install npm dependencies
 
 `npm run build:model` It downloads all the data files from AWS's S3 and trains the model. 
-Once the model is trained, you'll need to port your favorite checkpoint file to deeplearnjs using this command `python ./src/python/dump_checkpoints/dump_checkpoint_vars.py --model_type=tensorflow --output_dir=localModel/ --checkpoint_file=/var/tmp/whichString/models/<your-checkpoint-file>` Please note that the checkpoint 'file' is a trio of files and you should NOT any extension on it.
+Once the model is trained, you'll need to port your favorite checkpoint file to deeplearnjs using this command `npm run build:portmodel` This will run a bash script that prompts you to choose the model (amongst many possible checkpoints from previous steps) you want to port.
+
+### src/tensorflow
+I ran in a virtual python environment with 'virtualenv' using `source ~/tensorflow/bin/activate` (because that's where I put the virtual environment)
 
 `npm run start` - boot application
 
