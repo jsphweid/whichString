@@ -8,7 +8,7 @@ const detectPitch = PitchFinder.AMDF()
 import { CheckpointLoader, Array1D } from 'deeplearn'
 import WhichStringModel from './model'
 
-import { SAMPLING_RATE, ROTATION_DEGREES, VIOLIN_LOWEST_FREQ } from '../common/constants'
+import { SAMPLING_RATE, ROTATION_DEGREES, VIOLIN_LOWEST_FREQ, dotOffsetX, dotOffsetY } from '../common/constants'
 import FFTProcessor from './fft-processor'
 
 export interface WhichStringProps {
@@ -134,8 +134,8 @@ export default class WhichString extends React.Component<WhichStringProps, Which
 		const percentUpOnString: number = 1 - (lowestFreq / pitchGuess)
 		const bridgeKey = (stringLetter + 'Bridge') as ViolinRawPointType
 		const neckKey = (stringLetter + 'Neck') as ViolinRawPointType
-		const x: number = violinImgInfo[neckKey].x + ((violinImgInfo[bridgeKey].x - violinImgInfo[neckKey].x) * percentUpOnString)
-		const y: number = violinImgInfo[neckKey].y + ((violinImgInfo[bridgeKey].y - violinImgInfo[neckKey].y) * percentUpOnString)
+		const x: number = violinImgInfo[neckKey].x + ((violinImgInfo[bridgeKey].x - violinImgInfo[neckKey].x) * percentUpOnString) + dotOffsetX
+		const y: number = violinImgInfo[neckKey].y + ((violinImgInfo[bridgeKey].y - violinImgInfo[neckKey].y) * percentUpOnString) + dotOffsetY
 		const style: any = {
 			left: `${x}px`,
 			top: `${y}px`

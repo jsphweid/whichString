@@ -64,3 +64,6 @@ export const ROTATION_DEGREES: { e: string, a: string, d: string, g: string } = 
     d: '-0.5',
     g: '0.8'
 }
+
+export const dotOffsetY: number = -7
+export const dotOffsetX: number = 0
